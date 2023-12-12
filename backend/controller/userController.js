@@ -143,3 +143,152 @@ exports.resetPassword=catchAsyncError(async(req,res,next)=>{
     await user.save();
     sendToken(user,200,res);
 })
+
+
+
+
+/* USER ROUTES */
+
+/* NOW WE WILL CREATE ROUTES SPECIFICALLY FOR USER TO (GET HIS DETAILS) , (UPDATE HIS PASSWORD) AND (UPDATE HIS PROFILE) */
+
+//get user details
+exports.getUserDetails=catchAsyncError(async (req,res,next)=>{
+    const user=await User.findById(req.user.id)//only logged in user can get its details
+
+    res.status(200).json({
+        success:true,
+        user
+    })
+})
+
+
+//Updation of the user password by his own(this controller is also accesed by only logged in user )
+
+exports.updatePassword=catchAsyncError(async(req,res,next)=>{
+
+    const user=await User.findById(req.user.id).select("+password"); //logged in user is saved in req nd password need to explicity fetched
+
+    //now first check whether current user has entered correrct old password
+    const isMatched=await user.comparePassword(req.body.oldPassword,user.password);
+
+    if(!isMatched)
+    {
+        return next(new ErrorHandler("Please Enter correct password(old Password didnt matced)",400))
+    }
+     
+    //now we will check if new and renew password is same
+    if(req.body.newPassword!==req.body.confirmNewPassword)
+    {
+        return next(new ErrorHandler("New Passowrds didn't matched",400))
+    }
+
+    user.password=req.body.newPassword;
+    await user.save();//save new password
+
+   // now as user,password is changed then again log in with new token
+   sendToken(user,200,res)
+})
+
+
+//Update Profile by User (only logged in user can update his profile)
+
+exports.updatePrile=catchAsyncError(async(req,res,next)=>{
+
+    const newuserData={
+        name:req.body.name,
+        email:req.body.email
+    }
+
+    const user=await User.findByIdAndUpdate(req.user.id,newuserData,{
+        new:true,
+        runValidators:true
+    })
+    
+    res.status(200).json({
+        success:true,
+        user
+    })
+
+})
+
+
+
+/*ADMIN ROUTES*/
+
+//Admin routes so that he can check(get) total number of users
+
+exports.getAllUsers=catchAsyncError(async(req,res,next)=>{
+
+    const users=await User.find();
+
+    res.status(200).json({
+        success:true,
+        users
+    })
+})
+
+//admin want to fetch one user details(user id would be sebd in param)
+
+exports.getSingleUser=catchAsyncError(async(req,res,next)=>{
+
+    const user=await User.findById(req.params.id);
+
+    if(!user)
+    {
+        return next(new ErrorHandler("This user doesn't exist",400));
+    }
+
+    res.status(200).json({
+        success:true,
+        user
+    })
+})
+
+//Admin want to update users details
+//well get users id whose details need to be update in prams then
+exports.updateUserRole=catchAsyncError(async(req,res,next)=>{
+
+    const newUserData={
+        name:req.body.name,
+        email:req.body.email,
+        role:req.body.role
+    }
+
+    const user=await User.findByIdAndUpdate(req.params.id,newUserData)
+
+    await user.save();
+    if(!user)
+    {
+        return next(new ErrorHandler("This user doesn't exist",400));
+    }
+
+    res.status(200).json({
+        success:true,
+        user
+    })
+
+})
+
+//if admin want to delete a user then
+
+exports.deleteUser=catchAsyncError(async(req,res ,next)=>{
+
+    const user=await User.findByIdAndDelete(req.params.id);
+
+    if(!user)
+    {
+        return next(new ErrorHandler("This user doesn't exist",400));
+    }
+
+    // await user.remove();
+
+    res.status(200).json({
+        success:true,
+        message:"User Deleted Successfully"
+    })
+})
+
+
+
+
+

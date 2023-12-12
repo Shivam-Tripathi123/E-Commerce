@@ -1,5 +1,5 @@
 const express=require('express');
-const { getAllProducts ,createProducts, updateProduct, deleteProduct, getProductDetails} = require('../controller/productController');
+const { getAllProducts ,createProducts, updateProduct, deleteProduct, getProductDetails, createProductReview, getProductReviews, deleteReviews} = require('../controller/productController');
 const { isAuthenticatedUser } = require('../middleware/auth');
 const { authorizeRoles } = require('../middleware/authorizeRole');
 
@@ -20,18 +20,26 @@ router.route('/products').get( getAllProducts);//eqvivalent to  "router.get('/pr
 
 
 //Creating Product BY ADMIN
-router.route('/products/new').post(isAuthenticatedUser , authorizeRoles("admin") ,createProducts);
+router.route('/admin/products/new').post(isAuthenticatedUser , authorizeRoles("admin") ,createProducts);
 
 
 //Updating Products
-router.route('/product/:id').put(isAuthenticatedUser , authorizeRoles("admin") ,updateProduct)
+router.route('/admin/product/:id').put(isAuthenticatedUser , authorizeRoles("admin") ,updateProduct)
 
 
 //deleting Products
-router.route('/product/:id').delete(isAuthenticatedUser , authorizeRoles("admin") ,deleteProduct);
+router.route('/admin/product/:id').delete(isAuthenticatedUser , authorizeRoles("admin") ,deleteProduct);
 
 //Find One Product (Get Details)
 router.route('/product/:id').get(getProductDetails);
 
+//adding review bt current logged in user
+router.route('/review').put(isAuthenticatedUser,createProductReview);
+
+//to get all review of a product
+router.route('/reviews').get(getProductReviews);
+
+//to delete a particular review of a particular product
+router.route('/reviews').delete(isAuthenticatedUser,deleteReviews);
 
 module.exports=router;
