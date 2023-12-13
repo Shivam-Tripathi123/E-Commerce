@@ -23,6 +23,10 @@ const user=require('./routes/userRoutes')
 app.use('/api/v1',user);
 
 
+//setting routes for router
+const order=require("./routes/orderRoutes");
+app.use('/api/v1',order);
+
 //middleware for error
 app.use(errorMiddleware);
  
